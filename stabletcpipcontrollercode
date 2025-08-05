@@ -1,0 +1,48 @@
+#define RELAY_PIN 9
+
+String inputString = "";
+unsigned long lastHeartbeat = 0;
+const unsigned long heartbeatInterval = 3000;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, HIGH);
+}
+
+void loop() {
+  checkIncomingCommand();
+  sendHeartbeat();
+}
+
+void checkIncomingCommand() {
+  while (Serial.available()) {
+    char c = Serial.read();
+
+    if (c == '%') {
+      inputString += c;
+
+      if (inputString == "|OPENEN%") {
+        openGate();
+      }
+
+      inputString = "";
+    } else {
+      inputString += c;
+    }
+  }
+}
+
+void openGate() {
+  digitalWrite(RELAY_PIN, LOW);
+  Serial.println("Relay triggered");
+  delay(1000);
+  digitalWrite(RELAY_PIN, HIGH);
+}
+
+void sendHeartbeat() {
+  if (millis() - lastHeartbeat >= heartbeatInterval) {
+    lastHeartbeat = millis();
+    Serial.println("|HLT%");
+  }
+}
